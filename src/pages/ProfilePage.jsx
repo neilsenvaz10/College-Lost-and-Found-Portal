@@ -1,27 +1,53 @@
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { MOCK_ITEMS } from '../data/mockItems'
 import Navbar from '../components/Navbar'
 
-// Mock profiles for demo
-const MOCK_PROFILES = {
-  uid_demo_1: { fullName: 'Rohit Sharma', department: 'Computer Engineering', classDivision: 'TE-A', graduationYear: '2026', vesEmail: 'rohit.sharma@ves.ac.in', phone: '9876543210' },
-  uid_demo_2: { fullName: 'Meena Patil', department: 'Information Technology', classDivision: 'SE-B', graduationYear: '2027', vesEmail: 'meena.patil@ves.ac.in', phone: '9823456789' },
-  uid_demo_3: { fullName: 'Aakash Verma', department: 'Information Technology', classDivision: 'TE-A', graduationYear: '2026', vesEmail: 'aakash.verma@ves.ac.in', phone: '9811223344' },
-  uid_demo_4: { fullName: 'Priya Nair', department: 'Computer Engineering', classDivision: 'BE-C', graduationYear: '2025', vesEmail: 'priya.nair@ves.ac.in', phone: '9799887766' },
-  uid_demo_5: { fullName: 'Sanjay Gupta', department: 'Mechanical Engineering', classDivision: 'TE-A', graduationYear: '2026', vesEmail: 'sanjay.gupta@ves.ac.in', phone: '9766554433' },
-  uid_demo_6: { fullName: 'Divya Kulkarni', department: 'Electronics & TC', classDivision: 'SE-B', graduationYear: '2027', vesEmail: 'divya.kulkarni@ves.ac.in', phone: '9755443322' },
-  uid_demo_7: { fullName: 'Karan Mehta', department: 'Information Technology', classDivision: 'BE-A', graduationYear: '2025', vesEmail: 'karan.mehta@ves.ac.in', phone: '9744332211' },
-  uid_demo_8: { fullName: 'Sneha Joshi', department: 'Civil Engineering', classDivision: 'TE-B', graduationYear: '2026', vesEmail: 'sneha.joshi@ves.ac.in', phone: '9733221100' },
-}
-
 export default function ProfilePage() {
-  const { uid } = useParams()
-  const { user } = useAuth()
+  const { id } = useParams()
   const navigate = useNavigate()
+  
+  const [profile, setProfile] = useState(null)
+  const [userItems, setUserItems] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const profile = MOCK_PROFILES[uid]
-  const userItems = MOCK_ITEMS.filter((item) => item.postedBy === uid)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        // Fetch user profile
+        const userRes = await fetch(`http://localhost:5000/api/auth/user/${id}`)
+        if (userRes.ok) {
+          const userData = await userRes.json()
+          setProfile(userData)
+        }
+
+        // Fetch all items and filter (in a real app, use a dedicated endpoint)
+        const itemsRes = await fetch('http://localhost:5000/api/items')
+        if (itemsRes.ok) {
+          const allItems = await itemsRes.json()
+          const msItems = allItems.filter(item => 
+             item.userId === id || (item.user && item.user.id === id)
+          )
+          setUserItems(msItems)
+        }
+      } catch (err) {
+        console.error("Failed to load profile data", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchData()
+  }, [id])
+
+  if (loading) {
+    return (
+       <div className="min-h-screen bg-[#f7f7f5] flex flex-col">
+         <Navbar />
+         <div className="flex-1 flex items-center justify-center text-[#aaa]">Loading profile...</div>
+       </div>
+    )
+  }
 
   if (!profile) {
     return (
@@ -43,112 +69,140 @@ export default function ProfilePage() {
     )
   }
 
-  const initials = profile.fullName
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
+  const initials = profile.name
+    ? profile.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'U'
 
   const handleWhatsApp = () => {
     const msg = encodeURIComponent(
-      `Hi ${profile.fullName}! I found your contact on the VES Lost & Found portal.`
+      `Hi ${profile.name}! I found your contact on the VES Lost & Found portal.`
     )
-    window.open(`https://wa.me/91${profile.phone}?text=${msg}`, '_blank')
+    window.open(`https://wa.me/91${profile.phone || ''}?text=${msg}`, '_blank')
+  }
+
+  const categoryEmoji = (cat) => {
+    const map = {
+      Electronics: '📱', 'Books & Notes': '📓', 'ID / Cards': '🪪', Clothing: '🧥',
+      Accessories: '👜', Keys: '🔑', Other: '📦',
+    }
+    return map[cat] ?? '📦'
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f7f5] flex flex-col">
+    <div className="min-h-screen bg-[#f8f9fa] flex flex-col">
       <Navbar />
 
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-8">
-        {/* Back button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 text-sm text-[#6b6b6b] hover:text-[#1a1a1a] transition-colors mb-6"
-        >
-          ← Back
-        </button>
-
-        {/* Profile card */}
-        <div className="bg-white border border-[#e5e5e3] rounded-2xl p-6 mb-4">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-xl font-medium text-blue-700">
-              {initials}
-            </div>
-            <div>
-              <h1 className="font-display text-2xl font-semibold text-[#1a1a1a]">
-                {profile.fullName}
-              </h1>
-              <p className="text-sm text-[#6b6b6b]">{profile.department}</p>
-            </div>
-          </div>
-
-          {/* Details */}
-          <div className="space-y-3 border-t border-[#f0f0ee] pt-5">
-            {[
-              { key: 'VES Email', val: profile.vesEmail },
-              { key: 'Department', val: profile.department },
-              { key: 'Class / Division', val: profile.classDivision },
-              { key: 'Graduation Year', val: profile.graduationYear },
-            ].map(({ key, val }) => (
-              <div key={key} className="flex gap-4 text-sm">
-                <span className="text-[#6b6b6b] w-32 flex-shrink-0">{key}</span>
-                <span className="text-[#1a1a1a] font-medium">{val}</span>
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-10">
+        <div className="flex flex-col md:flex-row items-start gap-8">
+          {/* User Profile Info Card */}
+          <div className="w-full md:w-80 glass-card premium-shadow rounded-3xl p-8 sticky top-24">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-24 h-24 rounded-2xl bg-blue-50 border-2 border-blue-100 flex items-center justify-center text-3xl font-extrabold text-blue-600 mb-6 shadow-sm">
+                {initials}
               </div>
-            ))}
+              <h1 className="text-2xl font-extrabold text-[#111827] leading-tight">{profile.name}</h1>
+              <p className="text-blue-600 font-bold text-sm mt-1 uppercase tracking-widest">{profile.department || 'Student'}</p>
+              
+              <div className="w-full h-px bg-[#eee] my-8" />
+              
+              <div className="w-full space-y-6 text-left">
+                <div>
+                  <label className="text-[10px] font-extrabold text-[#9ca3af] uppercase tracking-widest block mb-1">Email</label>
+                  <p className="text-sm font-semibold text-[#111827] truncate">{profile.email}</p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-extrabold text-[#9ca3af] uppercase tracking-widest block mb-1">Phone</label>
+                  <p className="text-sm font-semibold text-[#111827]">{profile.phone || 'Not provided'}</p>
+                </div>
+                {profile.rollNumber && (
+                  <div>
+                    <label className="text-[10px] font-extrabold text-[#9ca3af] uppercase tracking-widest block mb-1">Roll Number</label>
+                    <p className="text-sm font-semibold text-[#111827]">{profile.rollNumber}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-8 w-full space-y-3">
+                <button
+                  onClick={handleWhatsApp}
+                  className="w-full py-3 bg-[#25d366] text-white rounded-2xl text-sm font-bold
+                             hover:bg-[#1ebe5d] transition-all shadow-md shadow-green-100 flex items-center justify-center gap-2 active:scale-95"
+                >
+                  <WhatsAppIcon />
+                  Chat on WhatsApp
+                </button>
+                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 text-[11px] text-[#6b7280] leading-relaxed text-left">
+                  <span className="font-bold text-[#111827]">Quick Location Clip:</span> You can find {profile.name?.split(' ')[0]} in <span className="font-bold text-blue-600">{profile.classDivision || '-'}</span> ({profile.department || '-'}), batch of {profile.graduationYear || '-'}.
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Contact button */}
-          <div className="mt-6 space-y-2">
-            <button
-              onClick={handleWhatsApp}
-              className="w-full py-3 bg-[#25d366] text-white rounded-xl text-sm font-medium
-                         hover:bg-[#1ebe5d] transition-colors flex items-center justify-center gap-2"
-            >
-              <WhatsAppIcon />
-              Contact via WhatsApp
-            </button>
+          {/* History/Items Section */}
+          <div className="flex-1 space-y-8 w-full">
+            <header className="flex items-center justify-between">
+              <div>
+                <h2 className="font-display text-3xl font-extrabold text-[#111827] tracking-tight">Post <span className="text-blue-600">History</span></h2>
+                <p className="text-[#6b7280] mt-1 font-medium">Items reported by this user.</p>
+              </div>
+              <button
+                onClick={() => navigate(-1)}
+                className="text-xs font-bold text-[#6b7280] hover:text-[#111827] flex items-center gap-1.5 transition-colors bg-white px-4 py-2 rounded-xl border border-[#eee] shadow-sm"
+              >
+                ← Back
+              </button>
+            </header>
 
-            <div className="bg-[#fafafa] border border-[#f0f0ee] rounded-xl p-3.5 text-xs text-[#6b6b6b] leading-relaxed">
-              <span className="font-medium text-[#1a1a1a]">Finder not responding?</span> You can find{' '}
-              {profile.fullName.split(' ')[0]} in person at{' '}
-              <span className="font-medium text-[#1a1a1a]">{profile.classDivision}</span> —{' '}
-              {profile.department}, batch of {profile.graduationYear}.
-            </div>
+            {userItems.length === 0 ? (
+              <div className="glass-card premium-shadow rounded-3xl p-20 text-center border-dashed border-2">
+                <div className="text-6xl mb-4">📜</div>
+                <p className="text-[#6b7280] font-medium">No items found in this user's history.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {userItems.map((item) => (
+                  <div 
+                    key={item.id} 
+                    className="glass-card premium-shadow rounded-2xl p-5 flex items-center justify-between card-hover group cursor-pointer"
+                    onClick={() => navigate('/dashboard')}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-[#f8f9fa] rounded-xl flex items-center justify-center text-2xl flex-shrink-0 group-hover:bg-blue-50 transition-colors overflow-hidden">
+                         {item.image ? (
+                           <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                         ) : (
+                           categoryEmoji(item.category)
+                         )}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-[#111827] group-hover:text-blue-600 transition-colors">{item.title}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                           <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest border ${
+                             item.type === 'Lost' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'
+                           }`}>
+                             {item.type}
+                           </span>
+                           <span className="text-[11px] font-bold text-[#9ca3af]">
+                             {new Date(item.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                           </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`px-3 py-1.5 rounded-xl text-xs font-bold ${
+                        item.status === 'Resolved' 
+                          ? 'bg-blue-50 text-blue-600' 
+                          : 'bg-[#f8f9fa] text-[#6b7280]'
+                      }`}>
+                        {item.status === 'Resolved' ? '✓ Returned' : 'Active'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-
-        {/* User's posted items */}
-        {userItems.length > 0 && (
-          <div>
-            <h2 className="text-sm font-medium text-[#6b6b6b] uppercase tracking-widest mb-3">
-              Items posted by {profile.fullName.split(' ')[0]}
-            </h2>
-            <div className="space-y-2">
-              {userItems.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => navigate('/dashboard')}
-                  className="bg-white border border-[#e5e5e3] rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-[#aaa] transition-colors"
-                >
-                  <span className="text-2xl">{item.emoji}</span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-[#1a1a1a]">{item.name}</p>
-                    <p className="text-xs text-[#6b6b6b]">{item.category} · {item.dateLabel}</p>
-                  </div>
-                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full
-                    ${item.status === 'lost' ? 'bg-red-50 text-red-700 border border-red-200' : ''}
-                    ${item.status === 'found' ? 'bg-green-50 text-green-700 border border-green-200' : ''}
-                    ${item.status === 'returned' ? 'bg-[#f5f5f3] text-[#6b6b6b] border border-[#d4d4d2]' : ''}
-                  `}>
-                    {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </main>
     </div>
   )

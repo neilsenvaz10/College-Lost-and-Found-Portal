@@ -1,33 +1,89 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react';
 
-const AuthContext = createContext(null)
-
-const MOCK_USER = {
-  uid: 'uid_demo_1',
-  email: 'student@ves.ac.in',
-}
-
-const MOCK_PROFILE = {
-  fullName: 'Rohit Sharma',
-  department: 'Computer Engineering',
-  classDivision: 'TE-A',
-  graduationYear: '2026',
-  vesEmail: 'rohit.sharma@ves.ac.in',
-  phone: '9876543210',
-}
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user] = useState(MOCK_USER)
-  const [profile] = useState(MOCK_PROFILE)
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const loginWithGoogle = async () => MOCK_USER
-  const logout = async () => {}
+  // Load user data if a token exists in localStorage
+  useEffect(() => {
+    const loadUser = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const res = await fetch('http://localhost:5000/api/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const userData = await res.json();
+            setUser(userData);
+          } else {
+            localStorage.removeItem('token');
+          }
+        } catch (err) {
+          console.error("Failed to load user:", err);
+          localStorage.removeItem('token');
+        }
+      }
+      setLoading(false);
+    };
+
+    loadUser();
+  }, []);
+
+  const login = async (email, password) => {
+    const res = await fetch('http://localhost:5000/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.message || 'Login failed');
+
+    localStorage.setItem('token', data.token);
+    setUser(data.user);
+    return data;
+  };
+
+  const register = async (formData) => {
+    const payload = {
+      name: formData.fullName,
+      email: formData.email,
+      password: formData.password,
+      phone: formData.phone,
+      department: formData.department,
+      graduationYear: formData.graduationYear,
+      classDivision: formData.classDivision,
+      rollNumber: formData.rollNumber
+    };
+
+    const res = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.message || 'Registration failed');
+
+    // We no longer auto-login user upon registration to allow redirection to login page
+    return data;
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, profile, setProfile: () => {}, loading: false, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
-export const useAuth = () => useContext(AuthContext)
+export const useAuth = () => useContext(AuthContext);

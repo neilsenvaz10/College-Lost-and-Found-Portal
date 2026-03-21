@@ -22,7 +22,7 @@ export default function App() {
             <ProtectedRoute><DashboardPage /></ProtectedRoute>
           } />
 
-          <Route path="/profile/:uid" element={
+          <Route path="/profile/:id" element={
             <ProtectedRoute><ProfilePage /></ProtectedRoute>
           } />
 

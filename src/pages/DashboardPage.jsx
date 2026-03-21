@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { MOCK_ITEMS, CATEGORIES } from '../data/mockItems'
+import { CATEGORIES, LOCATIONS } from '../constants'
 import Navbar from '../components/Navbar'
 import ItemCard from '../components/ItemCard'
 import ItemDetailModal from '../components/ItemDetailModal'
@@ -16,131 +16,295 @@ const TABS = [
 
 export default function DashboardPage() {
   const { user, profile } = useAuth()
-  const [items, setItems] = useState(MOCK_ITEMS)
+  const [items, setItems] = useState([])
   const [activeTab, setActiveTab] = useState('all')
   const [search, setSearch] = useState('')
   const [filterCat, setFilterCat] = useState('all')
+  const [filterLoc, setFilterLoc] = useState('all')
+  const [filterDate, setFilterDate] = useState('all') // 'all', 'today', 'week', 'month'
   const [selectedItem, setSelectedItem] = useState(null)
   const [reportType, setReportType] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  const fetchItems = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch('http://localhost:5000/api/items')
+      if (res.ok) {
+        const data = await res.json()
+        setItems(data)
+      }
+    } catch (err) {
+      console.error("Failed to fetch items:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchItems()
+  }, [])
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
-      if (activeTab === 'lost' && item.status !== 'lost') return false
-      if (activeTab === 'found' && item.status !== 'found') return false
-      if (activeTab === 'returned' && item.status !== 'returned') return false
-      if (activeTab === 'mine' && item.postedBy !== user?.uid) return false
+      // Mapping UI tabs to backend data model:
+      // item.type is 'Lost' or 'Found'
+      // item.status is 'Active' or 'Resolved'
+      
+      if (activeTab === 'all' && item.status === 'Resolved') return false
+      if (activeTab === 'lost' && (item.type !== 'Lost' || item.status === 'Resolved')) return false
+      if (activeTab === 'found' && (item.type !== 'Found' || item.status === 'Resolved')) return false
+      if (activeTab === 'returned' && item.status !== 'Resolved') return false
+      if (activeTab === 'mine' && item.user?.id !== user?.id && item.userId !== user?.id) return false
+      
       if (filterCat !== 'all' && item.category !== filterCat) return false
+      if (filterLoc !== 'all' && item.location !== filterLoc) return false
+
+      if (filterDate !== 'all') {
+        const itemDate = new Date(item.date)
+        const now = new Date()
+        if (filterDate === 'today') {
+          if (itemDate.toDateString() !== now.toDateString()) return false
+        } else if (filterDate === 'week') {
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+          if (itemDate < weekAgo) return false
+        } else if (filterDate === 'month') {
+          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+          if (itemDate < monthAgo) return false
+        }
+      }
+      
       if (search) {
         const q = search.toLowerCase()
         return (
-          item.name.toLowerCase().includes(q) ||
-          item.description.toLowerCase().includes(q) ||
-          item.category.toLowerCase().includes(q)
+          item.title?.toLowerCase().includes(q) ||
+          item.description?.toLowerCase().includes(q) ||
+          item.category?.toLowerCase().includes(q) ||
+          item.location?.toLowerCase().includes(q)
         )
       }
       return true
     })
-  }, [items, activeTab, search, filterCat, user])
+  }, [items, activeTab, search, filterCat, filterLoc, filterDate, user])
 
   const stats = useMemo(() => ({
-    lost: items.filter((i) => i.status === 'lost').length,
-    found: items.filter((i) => i.status === 'found').length,
-    returned: items.filter((i) => i.status === 'returned').length,
+    lost: items.filter((i) => i.type === 'Lost' && i.status === 'Active').length,
+    found: items.filter((i) => i.type === 'Found' && i.status === 'Active').length,
+    returned: items.filter((i) => i.status === 'Resolved').length,
   }), [items])
 
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        resolve('');
+        return;
+      }
+      const fileReader = new FileReader();
+      fileReader.readAsDataURL(file);
+      fileReader.onload = () => {
+        resolve(fileReader.result);
+      };
+      fileReader.onerror = (error) => {
+        reject(error);
+      };
+    });
+  };
+
   const handleSubmitReport = async (formData) => {
-    const dateLabel = new Date(formData.date).toLocaleDateString('en-IN', {
-      day: 'numeric', month: 'short',
-    })
-    const newItem = {
-      id: String(Date.now()),
-      name: formData.name,
-      category: formData.category,
-      emoji: categoryEmoji(formData.category),
-      date: formData.date,
-      dateLabel,
-      status: formData.type,
-      description: formData.description,
-      finder: {
-        name: profile?.fullName ?? 'You',
-        dept: `${profile?.classDivision ?? ''} ${profile?.department ?? ''}`.trim(),
-        phone: profile?.phone ?? '',
-      },
-      postedBy: user?.uid ?? 'me',
+    try {
+      const token = localStorage.getItem('token');
+      
+      let base64Image = '';
+      if (formData.image) {
+        base64Image = await convertToBase64(formData.image);
+      }
+
+      const payload = {
+        title: formData.name,
+        description: formData.description,
+        category: formData.category,
+        date: formData.date,
+        location: formData.location || 'Campus',
+        type: formData.type === 'lost' ? 'Lost' : 'Found',
+        image: base64Image
+      };
+
+      const res = await fetch('http://localhost:5000/api/items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        await fetchItems(); // Refresh the list
+      } else {
+        alert("Failed to create item.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error submitting report.");
     }
-    setItems((prev) => [newItem, ...prev])
   }
 
   const handleMarkReturned = async (id) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status: 'returned' } : item))
-    )
-    setSelectedItem(null)
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:5000/api/items/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'Resolved' })
+      });
+
+      if (res.ok) {
+         setItems((prev) =>
+          prev.map((item) => (item.id === id ? { ...item, status: 'Resolved' } : item))
+        );
+        setSelectedItem(null);
+      } else {
+        alert("Action failed. You might not be authorized.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   }
 
+  // Adjust selectedItem fields to match ItemCard and Modal expectations if needed
+  // UI expected specific fields that we replaced with MongoDB standard fields
+  const mapItemForUI = (item) => ({
+    ...item,
+    id: item.id,
+    name: item.title,
+    status: item.status === 'Resolved' ? 'returned' : item.type.toLowerCase(),
+    dateLabel: new Date(item.date).toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'short',
+    }),
+    emoji: categoryEmoji(item.category),
+    finder: {
+      name: item.user?.name || 'Unknown User',
+      dept: item.user?.department || 'Unknown Dept',
+      phone: item.user?.phone || '',
+    },
+    postedBy: item.user?.id || item.userId,
+    imageUrl: item.image || null
+  });
+
   return (
-    <div className="min-h-screen bg-[#f7f7f5] flex flex-col">
+    <div className="min-h-screen bg-[#f8f9fa] flex flex-col">
       <Navbar />
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-8">
-        <div className="flex items-start justify-between mb-6 gap-4">
-          <div>
-            <h1 className="font-display text-2xl font-semibold text-[#1a1a1a]">
-              Lost & Found Board
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-10">
+        <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="text-center md:text-left">
+            <h1 className="font-display text-4xl font-extrabold text-[#111827] tracking-tight">
+              Lost & Found <span className="text-blue-600">Board</span>
             </h1>
-            <p className="text-sm text-[#6b6b6b] mt-0.5">Browse items or report yours</p>
+            <p className="text-lg text-[#6b7280] mt-2 font-medium">
+              Browse items or report yours to help fellow VESITians.
+            </p>
           </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <button
-              onClick={() => setReportType('lost')}
-              className="px-4 py-2 text-sm font-medium rounded-lg border cursor-pointer transition-colors
-                         bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
-            >
-              + Report Lost
-            </button>
-            <button
-              onClick={() => setReportType('found')}
-              className="px-4 py-2 text-sm font-medium rounded-lg border cursor-pointer transition-colors
-                         bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-            >
-              + Report Found
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {[
-            { label: 'Active lost items', val: stats.lost, desc: 'Waiting to be found' },
-            { label: 'Found items', val: stats.found, desc: 'Claiming in progress' },
-            { label: 'Returned', val: stats.returned, desc: 'Successfully reunited' },
-          ].map(({ label, val, desc }) => (
-            <div key={label} className="bg-[#f5f5f3] rounded-xl px-4 py-3.5">
-              <p className="text-[11px] uppercase tracking-widest text-[#6b6b6b] mb-0.5">{label}</p>
-              <p className="text-3xl font-medium text-[#1a1a1a]">{val}</p>
-              <p className="text-[11px] text-[#aaa] mt-0.5">{desc}</p>
+          
+          {user && (
+            <div className="flex gap-3 justify-center md:justify-end">
+              <button
+                onClick={() => setReportType('lost')}
+                className="px-6 py-3 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-2xl transition-all shadow-md shadow-red-200 active:scale-95"
+              >
+                + Report Lost
+              </button>
+              <button
+                onClick={() => setReportType('found')}
+                className="px-6 py-3 text-sm font-bold text-white bg-green-500 hover:bg-green-600 rounded-2xl transition-all shadow-md shadow-green-200 active:scale-95"
+              >
+                + Report Found
+              </button>
             </div>
-          ))}
+          )}
+        </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="glass-card premium-shadow rounded-3xl p-6 border-l-4 border-red-500 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500 text-6xl">
+              🔍
+            </div>
+            <p className="text-[11px] font-bold text-red-600 uppercase tracking-widest mb-1">Active Lost Items</p>
+            <p className="text-4xl font-extrabold text-[#111827]">{stats.lost}</p>
+            <p className="text-[13px] text-[#6b7280] mt-2 font-medium">Waiting to be found</p>
+          </div>
+          
+          <div className="glass-card premium-shadow rounded-3xl p-6 border-l-4 border-green-500 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500 text-6xl">
+              🎁
+            </div>
+            <p className="text-[11px] font-bold text-green-600 uppercase tracking-widest mb-1">Found Items Today</p>
+            <p className="text-4xl font-extrabold text-[#111827]">{stats.found}</p>
+            <p className="text-[13px] text-[#6b7280] mt-2 font-medium">Claiming in progress</p>
+          </div>
+
+          <div className="glass-card premium-shadow rounded-3xl p-6 border-l-4 border-blue-500 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500 text-6xl">
+              🤝
+            </div>
+            <p className="text-[11px] font-bold text-blue-600 uppercase tracking-widest mb-1">Items Returned</p>
+            <p className="text-4xl font-extrabold text-[#111827]">{stats.returned}</p>
+            <p className="text-[13px] text-[#6b7280] mt-2 font-medium">Successfully reunited</p>
+          </div>
         </div>
 
-        <div className="flex gap-2.5 mb-5">
-          <input
-            className="input-base flex-1"
-            type="text"
-            placeholder="Search items by name or description..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <select
-            className="input-base w-44 flex-shrink-0"
-            value={filterCat}
-            onChange={(e) => setFilterCat(e.target.value)}
-          >
-            <option value="all">All categories</option>
-            {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-          </select>
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 mb-8">
+          <div className="flex-[2] relative group">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <input
+              type="text"
+              placeholder="Search items by name, description or location..."
+              className="w-full bg-white border border-[#eee] rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          
+          <div className="flex flex-1 gap-3 overflow-x-auto pb-2 lg:pb-0 custom-scrollbar">
+            <select
+              className="flex-1 min-w-[140px] bg-white border border-[#eee] rounded-2xl py-3 px-4 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer font-bold text-[#111827]"
+              value={filterCat}
+              onChange={(e) => setFilterCat(e.target.value)}
+            >
+              <option value="all">All categories</option>
+              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+
+            <select
+              className="flex-1 min-w-[140px] bg-white border border-[#eee] rounded-2xl py-3 px-4 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer font-bold text-[#111827]"
+              value={filterLoc}
+              onChange={(e) => setFilterLoc(e.target.value)}
+            >
+              <option value="all">All locations</option>
+              {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
+
+            <select
+              className="flex-1 min-w-[140px] bg-white border border-[#eee] rounded-2xl py-3 px-4 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer font-bold text-[#111827]"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+            >
+              <option value="all">Any time</option>
+              <option value="today">Reported Today</option>
+              <option value="week">Past 7 Days</option>
+              <option value="month">Past 30 Days</option>
+            </select>
+          </div>
         </div>
 
-        <div className="flex border-b border-[#e5e5e3] mb-5">
+        <div className="flex border-b border-[#e5e5e3] mb-6">
           {TABS.map(({ key, label }) => (
             <button
               key={key}
@@ -156,15 +320,47 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-20 text-[#aaa]">Loading items...</div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-20 text-[#aaa]">
             <div className="text-4xl mb-3">🔍</div>
             <p className="text-sm">No items found matching your filters.</p>
           </div>
+        ) : activeTab === 'all' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Lost Section */}
+            <section className="bg-white/40 p-6 rounded-3xl border border-white/60">
+              <div className="flex items-center gap-2 mb-6">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                <h2 className="text-[13px] font-bold text-[#111827] uppercase tracking-wider">Lost Items</h2>
+                <span className="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded-md font-bold ml-1">{filtered.filter(i => i.type === 'Lost').length}</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {filtered.filter(i => i.type === 'Lost').map((item) => (
+                  <ItemCard key={item.id} item={mapItemForUI(item)} onClick={() => setSelectedItem(item)} />
+                ))}
+              </div>
+            </section>
+
+            {/* Found Section */}
+            <section className="bg-white/40 p-6 rounded-3xl border border-white/60">
+              <div className="flex items-center gap-2 mb-6">
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+                <h2 className="text-[13px] font-bold text-[#111827] uppercase tracking-wider">Found Items</h2>
+                <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-md font-bold ml-1">{filtered.filter(i => i.type === 'Found').length}</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {filtered.filter(i => i.type === 'Found').map((item) => (
+                  <ItemCard key={item.id} item={mapItemForUI(item)} onClick={() => setSelectedItem(item)} />
+                ))}
+              </div>
+            </section>
+          </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5">
             {filtered.map((item) => (
-              <ItemCard key={item.id} item={item} onClick={setSelectedItem} />
+              <ItemCard key={item.id} item={mapItemForUI(item)} onClick={() => setSelectedItem(item)} />
             ))}
           </div>
         )}
@@ -172,9 +368,10 @@ export default function DashboardPage() {
 
       {selectedItem && (
         <ItemDetailModal
-          item={selectedItem}
+          item={mapItemForUI(selectedItem)}
           onClose={() => setSelectedItem(null)}
           onMarkReturned={handleMarkReturned}
+          currentUserId={user?.id}
         />
       )}
 
