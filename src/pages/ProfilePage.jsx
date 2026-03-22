@@ -95,7 +95,7 @@ export default function ProfilePage() {
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-10">
         <div className="flex flex-col md:flex-row items-start gap-8">
           {/* User Profile Info Card */}
-          <div className="w-full md:w-80 glass-card premium-shadow rounded-3xl p-8 sticky top-24">
+          <div className="w-full md:w-80 bg-white rounded-2xl shadow-md p-8 sticky top-24 border border-gray-100">
             <div className="flex flex-col items-center text-center">
               <div className="w-24 h-24 rounded-2xl bg-blue-50 border-2 border-blue-100 flex items-center justify-center text-3xl font-extrabold text-blue-600 mb-6 shadow-sm">
                 {initials}
@@ -154,7 +154,7 @@ export default function ProfilePage() {
             </header>
 
             {userItems.length === 0 ? (
-              <div className="glass-card premium-shadow rounded-3xl p-20 text-center border-dashed border-2">
+              <div className="bg-white rounded-2xl shadow-sm p-20 text-center border-dashed border-2 border-gray-100">
                 <div className="text-6xl mb-4">📜</div>
                 <p className="text-[#6b7280] font-medium">No items found in this user's history.</p>
               </div>
@@ -163,7 +163,7 @@ export default function ProfilePage() {
                 {userItems.map((item) => (
                   <div 
                     key={item.id} 
-                    className="glass-card premium-shadow rounded-2xl p-5 flex items-center justify-between card-hover group cursor-pointer"
+                    className="bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between border border-gray-50 hover:border-blue-100 hover:shadow-md transition-all group cursor-pointer"
                     onClick={() => navigate('/dashboard')}
                   >
                     <div className="flex items-center gap-4">
@@ -189,10 +189,10 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className={`px-3 py-1.5 rounded-xl text-xs font-bold ${
+                      <span className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
                         item.status === 'Resolved' 
-                          ? 'bg-blue-50 text-blue-600' 
-                          : 'bg-[#f8f9fa] text-[#6b7280]'
+                          ? 'bg-blue-600 text-white shadow-sm' 
+                          : 'bg-gray-100 text-[#6b7280]'
                       }`}>
                         {item.status === 'Resolved' ? '✓ Returned' : 'Active'}
                       </span>

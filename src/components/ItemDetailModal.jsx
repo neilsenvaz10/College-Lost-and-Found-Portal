@@ -21,9 +21,9 @@ export default function ItemDetailModal({ item, onClose, onMarkReturned }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 animate-in fade-in duration-300" onClick={onClose}>
       <div 
-        className="glass-card premium-shadow rounded-[2.5rem] w-full max-w-lg max-h-[90vh] flex flex-col relative border border-white/80 animate-in zoom-in-95 duration-300"
+        className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col relative border border-[#e5e5e3] shadow-2xl animate-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -116,7 +116,7 @@ export default function ItemDetailModal({ item, onClose, onMarkReturned }) {
         </div>
 
         {/* Footer Actions */}
-        <div className="p-8 pt-4 border-t border-gray-100 bg-gray-50/30 rounded-b-[2.5rem]">
+        <div className="p-8 pt-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
           {item.status === 'returned' ? (
             <div className="w-full py-4 bg-gray-100 text-gray-500 rounded-2xl text-sm font-bold text-center flex items-center justify-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

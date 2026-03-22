@@ -8,7 +8,7 @@ export default function ItemCard({ item, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="glass-card premium-shadow rounded-2xl p-4 cursor-pointer card-hover border border-transparent hover:border-blue-200 group relative"
+      className="bg-white rounded-2xl p-4 cursor-pointer border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all group relative"
     >
       <div className={`h-40 rounded-xl flex items-center justify-center text-5xl mb-4 overflow-hidden relative transition-colors
         ${item.status === 'lost' ? 'bg-red-50/50' : item.status === 'found' ? 'bg-green-50/50' : 'bg-blue-50/50'}`}>

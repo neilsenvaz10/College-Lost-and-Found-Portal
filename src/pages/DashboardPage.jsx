@@ -210,16 +210,16 @@ export default function DashboardPage() {
           </div>
           
           {user && (
-            <div className="flex gap-3 justify-center md:justify-end">
+            <div className="flex gap-2 justify-center md:justify-end">
               <button
                 onClick={() => setReportType('lost')}
-                className="px-6 py-3 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-2xl transition-all shadow-md shadow-red-200 active:scale-95"
+                className="px-5 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-all shadow-sm active:scale-95"
               >
                 + Report Lost
               </button>
               <button
                 onClick={() => setReportType('found')}
-                className="px-6 py-3 text-sm font-bold text-white bg-green-500 hover:bg-green-600 rounded-2xl transition-all shadow-md shadow-green-200 active:scale-95"
+                className="px-5 py-2.5 text-sm font-bold text-white bg-green-600 hover:bg-green-700 rounded-xl transition-all shadow-sm active:scale-95"
               >
                 + Report Found
               </button>
@@ -228,7 +228,7 @@ export default function DashboardPage() {
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="glass-card premium-shadow rounded-3xl p-6 border-l-4 border-red-500 relative overflow-hidden group">
+          <div className="bg-white rounded-2xl p-6 border-l-4 border-red-500 shadow-sm relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500 text-6xl">
               🔍
             </div>
@@ -237,7 +237,7 @@ export default function DashboardPage() {
             <p className="text-[13px] text-[#6b7280] mt-2 font-medium">Waiting to be found</p>
           </div>
           
-          <div className="glass-card premium-shadow rounded-3xl p-6 border-l-4 border-green-500 relative overflow-hidden group">
+          <div className="bg-white rounded-2xl p-6 border-l-4 border-green-500 shadow-sm relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500 text-6xl">
               🎁
             </div>
@@ -246,7 +246,7 @@ export default function DashboardPage() {
             <p className="text-[13px] text-[#6b7280] mt-2 font-medium">Claiming in progress</p>
           </div>
 
-          <div className="glass-card premium-shadow rounded-3xl p-6 border-l-4 border-blue-500 relative overflow-hidden group">
+          <div className="bg-white rounded-2xl p-6 border-l-4 border-blue-500 shadow-sm relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500 text-6xl">
               🤝
             </div>
@@ -256,7 +256,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 mb-8">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 mb-8">
           <div className="flex-[2] relative group">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -266,15 +266,15 @@ export default function DashboardPage() {
             <input
               type="text"
               placeholder="Search items by name, description or location..."
-              className="w-full bg-white border border-[#eee] rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+              className="w-full bg-white border border-[#ddd] rounded-xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:border-blue-500 transition-all shadow-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           
-          <div className="flex flex-1 gap-3 overflow-x-auto pb-2 lg:pb-0 custom-scrollbar">
+          <div className="flex flex-1 gap-2 overflow-x-auto pb-2 lg:pb-0 custom-scrollbar">
             <select
-              className="flex-1 min-w-[140px] bg-white border border-[#eee] rounded-2xl py-3 px-4 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer font-bold text-[#111827]"
+              className="flex-1 min-w-[140px] bg-white border border-[#ddd] rounded-xl py-3 px-4 text-xs focus:outline-none focus:border-blue-500 transition-all shadow-sm cursor-pointer font-bold text-[#111827]"
               value={filterCat}
               onChange={(e) => setFilterCat(e.target.value)}
             >
@@ -283,7 +283,7 @@ export default function DashboardPage() {
             </select>
 
             <select
-              className="flex-1 min-w-[140px] bg-white border border-[#eee] rounded-2xl py-3 px-4 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer font-bold text-[#111827]"
+              className="flex-1 min-w-[140px] bg-white border border-[#ddd] rounded-xl py-3 px-4 text-xs focus:outline-none focus:border-blue-500 transition-all shadow-sm cursor-pointer font-bold text-[#111827]"
               value={filterLoc}
               onChange={(e) => setFilterLoc(e.target.value)}
             >
@@ -292,7 +292,7 @@ export default function DashboardPage() {
             </select>
 
             <select
-              className="flex-1 min-w-[140px] bg-white border border-[#eee] rounded-2xl py-3 px-4 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer font-bold text-[#111827]"
+              className="flex-1 min-w-[140px] bg-white border border-[#ddd] rounded-xl py-3 px-4 text-xs focus:outline-none focus:border-blue-500 transition-all shadow-sm cursor-pointer font-bold text-[#111827]"
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value)}
             >
@@ -330,9 +330,9 @@ export default function DashboardPage() {
         ) : activeTab === 'all' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Lost Section */}
-            <section className="bg-white/40 p-6 rounded-3xl border border-white/60">
+            <section className="bg-gray-100/50 p-6 rounded-2xl border border-gray-200">
               <div className="flex items-center gap-2 mb-6">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
                 <h2 className="text-[13px] font-bold text-[#111827] uppercase tracking-wider">Lost Items</h2>
                 <span className="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded-md font-bold ml-1">{filtered.filter(i => i.type === 'Lost').length}</span>
               </div>
@@ -344,9 +344,9 @@ export default function DashboardPage() {
             </section>
 
             {/* Found Section */}
-            <section className="bg-white/40 p-6 rounded-3xl border border-white/60">
+            <section className="bg-gray-100/50 p-6 rounded-2xl border border-gray-200">
               <div className="flex items-center gap-2 mb-6">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
                 <h2 className="text-[13px] font-bold text-[#111827] uppercase tracking-wider">Found Items</h2>
                 <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-md font-bold ml-1">{filtered.filter(i => i.type === 'Found').length}</span>
               </div>

@@ -27,42 +27,41 @@ export default function ReportModal({ type, onClose, onSubmit }) {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-300"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 animate-in fade-in duration-300"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="glass-card premium-shadow rounded-[2.5rem] w-full max-w-lg max-h-[90vh] flex flex-col relative border border-white/80 animate-in zoom-in-95 duration-300 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#e5e5e3] w-full max-w-lg max-h-[90vh] flex flex-col relative animate-in zoom-in-95 duration-300 overflow-hidden shadow-xl">
         {/* Header */}
-        <div className="p-8 pb-4 flex items-center justify-between">
+        <div className="p-6 pb-4 flex items-center justify-between border-b border-[#eee]">
           <div>
-            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-1 ${
-              type === 'lost' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'
-            }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${type === 'lost' ? 'bg-red-500' : 'bg-green-500'}`} />
-              {type === 'lost' ? 'Reporting Missing Item' : 'Reporting Found Item'}
-            </div>
-            <h2 className="font-display text-2xl font-extrabold text-[#111827]">
+            <h2 className="font-display text-xl font-bold text-[#111827]">
               {type === 'lost' ? 'What did you lose?' : 'What did you find?'}
             </h2>
+            <div className={`mt-1 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${
+              type === 'lost' ? 'text-red-600' : 'text-green-600'
+            }`}>
+              {type === 'lost' ? 'Reporting Missing Item' : 'Reporting Found Item'}
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-gray-600"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <div className="px-8 pb-8 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+        <div className="px-6 py-6 overflow-y-auto custom-scrollbar flex-1 space-y-5">
           {/* Form Fields */}
           <div className="space-y-4">
             <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-0.5">
                 Item name <span className="text-red-500">*</span>
               </label>
               <input
-                className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl py-4 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500/50 focus:bg-white transition-all font-medium text-gray-900 placeholder:text-gray-400"
+                className="input-base"
                 type="text"
                 placeholder="e.g. Blue scientific calculator"
                 value={form.name}
@@ -72,11 +71,11 @@ export default function ReportModal({ type, onClose, onSubmit }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-0.5">
                   Category <span className="text-red-500">*</span>
                 </label>
                 <select
-                  className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl py-4 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500/50 focus:bg-white transition-all font-medium text-gray-900 appearance-none cursor-pointer"
+                  className="input-base px-3"
                   value={form.category}
                   onChange={(e) => set('category', e.target.value)}
                 >
@@ -87,11 +86,11 @@ export default function ReportModal({ type, onClose, onSubmit }) {
                 </select>
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-0.5">
                   {type === 'lost' ? 'Date lost' : 'Date found'} <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl py-4 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500/50 focus:bg-white transition-all font-medium text-gray-900 cursor-pointer"
+                  className="input-base px-3"
                   type="date"
                   value={form.date}
                   onChange={(e) => set('date', e.target.value)}
@@ -101,11 +100,11 @@ export default function ReportModal({ type, onClose, onSubmit }) {
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-0.5">
                 Last Seen Location <span className="text-red-500">*</span>
               </label>
               <select
-                className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl py-4 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500/50 focus:bg-white transition-all font-medium text-gray-900 appearance-none cursor-pointer"
+                className="input-base px-3"
                 value={form.location}
                 onChange={(e) => set('location', e.target.value)}
               >
@@ -117,11 +116,11 @@ export default function ReportModal({ type, onClose, onSubmit }) {
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-0.5">
                 Description <span className="text-red-500">*</span>
               </label>
               <textarea
-                className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl py-4 px-5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500/50 focus:bg-white transition-all font-medium text-gray-900 placeholder:text-gray-400 resize-none"
+                className="input-base resize-none"
                 rows={3}
                 placeholder="Describe the item — color, brand, or any distinguishing marks..."
                 value={form.description}
@@ -130,13 +129,13 @@ export default function ReportModal({ type, onClose, onSubmit }) {
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">
-                Photo Evidence <span className="text-gray-300 font-medium">(optional)</span>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-0.5">
+                Photo Evidence <span className="text-gray-400 font-medium">(optional)</span>
               </label>
-              <label className="group block border-2 border-dashed border-gray-100 bg-gray-50/30 rounded-3xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-300">
+              <label className="group block border-2 border-dashed border-gray-200 bg-gray-50 rounded-xl p-6 text-center cursor-pointer hover:border-gray-300 hover:bg-gray-100 transition-all">
                 <div className="flex flex-col items-center">
-                  <span className="text-3xl mb-2 group-hover:scale-110 transition-transform">📸</span>
-                  <span className="text-sm text-gray-500 font-medium group-hover:text-blue-600 transition-colors">
+                  <span className="text-2xl mb-1">📸</span>
+                  <span className="text-sm text-gray-500 font-medium">
                     {form.image ? form.image.name : 'Choose a photo or take one now'}
                   </span>
                   <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter">PNG, JPG up to 5MB</p>
@@ -153,15 +152,13 @@ export default function ReportModal({ type, onClose, onSubmit }) {
         </div>
 
         {/* Footer */}
-        <div className="p-8 pt-4 border-t border-gray-100 bg-gray-50/30">
+        <div className="p-6 pt-4 border-t border-[#eee] bg-gray-50">
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className={`w-full py-4 rounded-2xl text-sm font-bold transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${
-              type === 'lost' 
-                ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-100' 
-                : 'bg-green-500 hover:bg-green-600 text-white shadow-green-100'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`btn-primary flex items-center justify-center gap-2 ${
+              type === 'lost' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
+            } disabled:opacity-50`}
           >
             {loading ? (
               <span className="flex items-center gap-2">

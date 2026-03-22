@@ -89,7 +89,7 @@ export default function RegistrationPage() {
         <div className="absolute bottom-1/4 -left-20 w-80 h-80 bg-red-100 rounded-full blur-[100px] opacity-20" />
 
         <div className="w-full max-w-2xl relative z-10">
-          <form onSubmit={handleSubmit} className="glass-card premium-shadow rounded-[2.5rem] p-10 border border-white/80">
+          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-10 border border-[#eee]">
             <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-full px-4 py-1.5 text-[11px] font-bold text-blue-600 mb-8 uppercase tracking-widest">
               <span className="w-2 h-2 bg-blue-500 rounded-full" />
               Join the VES Community
