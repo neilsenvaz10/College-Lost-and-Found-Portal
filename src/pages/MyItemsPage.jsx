@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import API_URL from '../config'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
@@ -18,7 +19,7 @@ export default function MyItemsPage() {
     try {
       setLoading(true)
       const token = localStorage.getItem('token')
-      const res = await fetch('http://localhost:5000/api/items/myitems', {
+      const res = await fetch(`${API_URL}/api/items/myitems`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (res.ok) {
@@ -48,7 +49,7 @@ export default function MyItemsPage() {
   const handleMarkReturned = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/items/${id}/status`, {
+      const res = await fetch(`${API_URL}/api/items/${id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -94,7 +95,7 @@ export default function MyItemsPage() {
         image: base64Image
       };
 
-      const res = await fetch('http://localhost:5000/api/items', {
+      const res = await fetch(`${API_URL}/api/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload)

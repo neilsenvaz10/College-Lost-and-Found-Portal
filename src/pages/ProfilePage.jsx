@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import API_URL from '../config'
 
 export default function ProfilePage() {
   const { id } = useParams()
@@ -15,14 +16,14 @@ export default function ProfilePage() {
       try {
         setLoading(true)
         // Fetch user profile
-        const userRes = await fetch(`http://localhost:5000/api/auth/user/${id}`)
+        const userRes = await fetch(`${API_URL}/api/auth/user/${id}`)
         if (userRes.ok) {
           const userData = await userRes.json()
           setProfile(userData)
         }
 
         // Fetch all items and filter (in a real app, use a dedicated endpoint)
-        const itemsRes = await fetch('http://localhost:5000/api/items')
+        const itemsRes = await fetch(`${API_URL}/api/items`)
         if (itemsRes.ok) {
           const allItems = await itemsRes.json()
           const msItems = allItems.filter(item => 

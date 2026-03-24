@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import API_URL from '../config'
 import { useAuth } from '../context/AuthContext'
 import { CATEGORIES, LOCATIONS } from '../constants'
 import Navbar from '../components/Navbar'
@@ -29,7 +30,7 @@ export default function DashboardPage() {
   const fetchItems = async () => {
     try {
       setLoading(true)
-      const res = await fetch('http://localhost:5000/api/items')
+      const res = await fetch(`${API_URL}/api/items`)
       if (res.ok) {
         const data = await res.json()
         setItems(data)
@@ -129,7 +130,7 @@ export default function DashboardPage() {
         image: base64Image
       };
 
-      const res = await fetch('http://localhost:5000/api/items', {
+      const res = await fetch(`${API_URL}/api/items`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -152,7 +153,7 @@ export default function DashboardPage() {
   const handleMarkReturned = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/items/${id}/status`, {
+      const res = await fetch(`${API_URL}/api/items/${id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
